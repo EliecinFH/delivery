@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Restaurante e Delivery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.connected {
+            background: #4caf50;
+        }
+
+        .status-dot.disconnected {
+            background: #f44336;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 0 10px 10px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .card.livre {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .card.ocupada {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .card.reservada {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .card-status.livre {
+            background: #4caf50;
+            color: white;
+        }
+
+        .card-status.ocupada {
+            background: #f44336;
+            color: white;
+        }
+
+        .card-status.reservada {
+            background: #ff9800;
+            color: white;
+        }
+
+        .card-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .pedido-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pedido-numero {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .pedido-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pedido-status.pendente {
+            background: #ff9800;
+            color: white;
+        }
+
+        .pedido-status.preparando {
+            background: #2196f3;
+            color: white;
+        }
+
+        .pedido-status.pronto {
+            background: #4caf50;
+            color: white;
+        }
+
+        .qrcode-container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .qrcode-container img {
+            max-width: 300px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Sistema de Restaurante e Delivery</h1>
+            <div class="status">
+                <div class="status-item">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Verificando...</span>
+                </div>
+                <div class="status-item">
+                    <span>Impressora: </span>
+                    <span id="printerStatus">Verificando...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="qrcode-container" id="qrcodeContainer" style="display: none;">
+            <h2>Escaneie o QR Code para conectar o WhatsApp</h2>
+            <div id="qrcode"></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('mesas')">🪑 Mesas</button>
+            <button class="tab" onclick="showTab('pedidos')">📦 Pedidos</button>
+            <button class="tab" onclick="showTab('produtos')">🍽️ Produtos</button>
+            <button class="tab" onclick="showTab('impressao')">🖨️ Impressão</button>
+        </div>
+
+        <div id="mesas" class="tab-content active">
+            <h2>Gestão de Mesas</h2>
+            <button class="btn btn-primary" onclick="carregarMesas()">🔄 Atualizar</button>
+            <div class="grid" id="mesasGrid">
+                <div class="loading">Carregando mesas...</div>
+            </div>
+        </div>
+
+        <div id="pedidos" class="tab-content">
+            <h2>Pedidos</h2>
+            <button class="btn btn-primary" onclick="carregarPedidos()">🔄 Atualizar</button>
+            <div id="pedidosList">
+                <div class="loading">Carregando pedidos...</div>
+            </div>
+        </div>
+
+        <div id="produtos" class="tab-content">
+            <h2>Produtos</h2>
+            <button class="btn btn-primary" onclick="carregarProdutos()">🔄 Atualizar</button>
+            <div id="produtosList">
+                <div class="loading">Carregando produtos...</div>
+            </div>
+        </div>
+
+        <div id="impressao" class="tab-content">
+            <h2>Configuração de Impressão</h2>
+            <div style="max-width: 500px;">
+                <div style="margin-bottom: 20px;">
+                    <label>Tipo de Impressora:</label>
+                    <select id="printerType" style="width: 100%; padding: 10px; margin-top: 5px;">
+                        <option value="network">Rede (Network)</option>
+                        <option value="usb">USB</option>
+                    </select>
+                </div>
+                <div id="networkConfig" style="margin-bottom: 20px;">
+                    <label>IP da Impressora:</label>
+                    <input type="text" id="printerIP" placeholder="192.168.1.100" style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <label style="margin-top: 10px; display: block;">Porta:</label>
+                    <input type="number" id="printerPort" placeholder="9100" value="9100" style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+                <div id="usbConfig" style="margin-bottom: 20px; display: none;">
+                    <label>Vendor ID:</label>
+                    <input type="text" id="vendorId" placeholder="0x04f9" style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <label style="margin-top: 10px; display: block;">Product ID:</label>
+                    <input type="text" id="productId" placeholder="0x2042" style="width: 100%; padding: 10px; margin-top: 5px;">
+                </div>
+                <button class="btn btn-primary" onclick="conectarImpressora()" style="width: 100%;">Conectar Impressora</button>
+                <button class="btn btn-success" onclick="testarImpressao()" style="width: 100%; margin-top: 10px;">Testar Impressão</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar status do sistema
+        async function verificarStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.botStatus === 'conectado') {
+                    statusDot.className = 'status-dot connected';
+                    statusText.textContent = 'WhatsApp Conectado';
+                    document.getElementById('qrcodeContainer').style.display = 'none';
+                } else {
+                    statusDot.className = 'status-dot disconnected';
+                    statusText.textContent = 'WhatsApp Desconectado';
+                    if (data.hasQR) {
+                        carregarQRCode();
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar status:', error);
+            }
+        }
+
+        // Carregar QR Code
+        async function carregarQRCode() {
+            try {
+                const response = await fetch('/qrcode');
+                const data = await response.json();
+                
+                if (data.hasQR && data.qrCode) {
+                    document.getElementById('qrcodeContainer').style.display = 'block';
+                    document.getElementById('qrcode').innerHTML = `<img src="${data.qrCode}" alt="QR Code">`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar QR Code:', error);
+            }
+        }
+
+        // Verificar status da impressora
+        async function verificarImpressora() {
+            try {
+                const response = await fetch('/api/impressao/status');
+                const data = await response.json();
+                document.getElementById('printerStatus').textContent = data.conectada ? 'Conectada' : 'Desconectada';
+            } catch (error) {
+                document.getElementById('printerStatus').textContent = 'Erro';
+            }
+        }
+
+        // Mostrar aba
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'mesas') carregarMesas();
+            if (tabName === 'pedidos') carregarPedidos();
+            if (tabName === 'produtos') carregarProdutos();
+        }
+
+        // Carregar mesas
+        async function carregarMesas() {
+            try {
+                const response = await fetch('/api/mesas');
+                const data = await response.json();
+                
+                const grid = document.getElementById('mesasGrid');
+                grid.innerHTML = '';
+                
+                data.mesas.forEach(mesa => {
+                    const card = document.createElement('div');
+                    card.className = `card ${mesa.status}`;
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">Mesa ${mesa.numero}</div>
+                            <div class="card-status ${mesa.status}">${mesa.status}</div>
+                        </div>
+                        <div class="card-info">
+                            Capacidade: ${mesa.capacidade} pessoas
+                        </div>
+                        <div style="margin-top: 10px;">
+                            ${mesa.status === 'livre' ? 
+                                `<button class="btn btn-success" onclick="ocuparMesa(${mesa.numero})">Ocupar</button>` :
+                                `<button class="btn btn-danger" onclick="liberarMesa(${mesa.numero})">Liberar</button>`
+                            }
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar mesas:', error);
+            }
+        }
+
+        // Carregar pedidos
+        async function carregarPedidos() {
+            try {
+                const response = await fetch('/api/pedidos?limit=20');
+                const data = await response.json();
+                
+                const list = document.getElementById('pedidosList');
+                list.innerHTML = '';
+                
+                data.pedidos.forEach(pedido => {
+                    const item = document.createElement('div');
+                    item.className = 'pedido-item';
+                    item.innerHTML = `
+                        <div class="pedido-header">
+                            <div class="pedido-numero">${pedido.numeroPedido}</div>
+                            <div class="pedido-status ${pedido.status}">${pedido.status}</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Cliente:</strong> ${pedido.cliente.nome}<br>
+                            <strong>Tipo:</strong> ${pedido.tipoPedido}<br>
+                            <strong>Total:</strong> R$ ${pedido.total.toFixed(2)}
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="imprimirCozinha('${pedido._id}')">Imprimir Cozinha</button>
+                            ${pedido.tipoPedido === 'delivery' ? 
+                                `<button class="btn btn-warning" onclick="imprimirEntrega('${pedido._id}')">Imprimir Entrega</button>` : ''
+                            }
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar pedidos:', error);
+            }
+        }
+
+        // Carregar produtos
+        async function carregarProdutos() {
+            try {
+                const response = await fetch('/api/produtos');
+                const data = await response.json();
+                
+                const list = document.getElementById('produtosList');
+                list.innerHTML = '';
+                
+                data.produtos.forEach(produto => {
+                    const item = document.createElement('div');
+                    item.className = 'pedido-item';
+                    item.innerHTML = `
+                        <div class="pedido-header">
+                            <div class="pedido-numero">${produto.nome}</div>
+                            <div>R$ ${produto.preco.toFixed(2)}</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>Categoria:</strong> ${produto.categoria}<br>
+                            <strong>Disponível:</strong> ${produto.disponivel ? 'Sim' : 'Não'}
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            }
+        }
+
+        // Conectar impressora
+        async function conectarImpressora() {
+            const tipo = document.getElementById('printerType').value;
+            const config = { tipo };
+            
+            if (tipo === 'network') {
+                config.ip = document.getElementById('printerIP').value;
+                config.porta = parseInt(document.getElementById('printerPort').value);
+            } else {
+                config.vendorId = document.getElementById('vendorId').value;
+                config.productId = document.getElementById('productId').value;
+            }
+            
+            try {
+                const response = await fetch('/api/impressao/conectar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                alert(data.message);
+                verificarImpressora();
+            } catch (error) {
+                alert('Erro ao conectar impressora: ' + error.message);
+            }
+        }
+
+        // Testar impressão
+        async function testarImpressao() {
+            try {
+                const response = await fetch('/api/impressao/teste', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                alert('Erro ao testar impressão: ' + error.message);
+            }
+        }
+
+        // Imprimir ticket de cozinha
+        async function imprimirCozinha(pedidoId) {
+            try {
+                const response = await fetch(`/api/impressao/pedido/${pedidoId}/cozinha`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                alert('Erro ao imprimir: ' + error.message);
+            }
+        }
+
+        // Imprimir ticket de entrega
+        async function imprimirEntrega(pedidoId) {
+            try {
+                const response = await fetch(`/api/impressao/pedido/${pedidoId}/entrega`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                alert('Erro ao imprimir: ' + error.message);
+            }
+        }
+
+        // Ocupar mesa
+        async function ocuparMesa(numero) {
+            if (confirm(`Deseja ocupar a mesa ${numero}?`)) {
+                try {
+                    await fetch(`/api/mesas/${numero}/ocupar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                    carregarMesas();
+                } catch (error) {
+                    alert('Erro ao ocupar mesa');
+                }
+            }
+        }
+
+        // Liberar mesa
+        async function liberarMesa(numero) {
+            if (confirm(`Deseja liberar a mesa ${numero}?`)) {
+                try {
+                    await fetch(`/api/mesas/${numero}/liberar`, {
+                        method: 'POST'
+                    });
+                    carregarMesas();
+                } catch (error) {
+                    alert('Erro ao liberar mesa');
+                }
+            }
+        }
+
+        // Configurar tipo de impressora
+        document.getElementById('printerType').addEventListener('change', function() {
+            if (this.value === 'network') {
+                document.getElementById('networkConfig').style.display = 'block';
+                document.getElementById('usbConfig').style.display = 'none';
+            } else {
+                document.getElementById('networkConfig').style.display = 'none';
+                document.getElementById('usbConfig').style.display = 'block';
+            }
+        });
+
+        // Inicializar
+        verificarStatus();
+        verificarImpressora();
+        setInterval(verificarStatus, 5000);
+        setInterval(verificarImpressora, 10000);
+    </script>
+</body>
+</html>
+
